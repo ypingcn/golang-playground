@@ -1,0 +1,39 @@
+ARG GO_VERSION=1.18.3
+FROM golang:${GO_VERSION}-alpine3.16 AS build-playground
+LABEL maintainer="soulteary@gmail.com"
+# download golang deps
+ENV GO111MODULE=on
+ENV GOPROXY="https://goproxy.cn"
+COPY src/go.mod /go/src/playground/go.mod
+COPY src/go.sum /go/src/playground/go.sum
+WORKDIR /go/src/playground
+RUN go mod download
+# build golang binaries
+COPY ./src /go/src/playground
+RUN CGO_ENABLED=0 go build -ldflags "-w -s" .
+
+
+
+FROM golang:${GO_VERSION}-alpine3.16
+COPY --from=build-playground /usr/local/go /usr/local/go-faketime
+
+ENV CGO_ENABLED 0
+ENV GOPATH /go
+ENV GOROOT /usr/local/go-faketime
+ARG GO_VERSION
+ENV GO_VERSION ${GO_VERSION}
+ENV PATH="/go/bin:/usr/local/go-faketime/bin:${PATH}"
+
+WORKDIR /usr/local/go-faketime
+RUN ./bin/go install --tags=faketime std
+RUN ./bin/go vet --tags=faketime std || true
+
+RUN mkdir /app
+COPY --from=build-playground /go/src/playground/playground /app
+COPY src/edit.html /app
+COPY src/static /app/static
+COPY src/examples /app/examples
+WORKDIR /app
+
+EXPOSE 8080
+ENTRYPOINT ["/app/playground"]
