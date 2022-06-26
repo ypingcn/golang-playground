@@ -1,0 +1,26 @@
+version: '3'
+services:
+
+  sandbox:
+    image: soulteary/golang-playground:sandbox-1.18.3
+    restart: always
+    command: -mode=server -listen=0.0.0.0:80 -workers=1 -untrusted-container=soulteary/golang-playground:actuator-1.18.3
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - playground
+
+  web:
+    image: soulteary/golang-playground:web-1.18.3
+    restart: always
+    environment:
+      - SANDBOX_BACKEND_URL=http://sandbox:/run
+    ports:
+      - 8080:8080
+    depends_on:
+      - sandbox
+    networks:
+      - playground
+
+networks: 
+  playground:
