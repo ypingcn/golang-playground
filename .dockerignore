@@ -1,0 +1,6 @@
+.vscode
+docker
+.dockerignore
+.gitignore
+docker-compose.yml
+make-images.sh
