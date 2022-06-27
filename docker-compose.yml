@@ -9,12 +9,15 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - playground
+    depends_on:
+      - memcached
 
   web:
     image: soulteary/golang-playground:web-1.18.3
     restart: always
     environment:
       - SANDBOX_BACKEND_URL=http://sandbox:/run
+      - MEMCACHED_ADDR=memcached:11211
     ports:
       - 8080:8080
     depends_on:
@@ -22,5 +25,10 @@ services:
     networks:
       - playground
 
+  memcached:
+    image: memcached:1.6.15-alpine
+    command: memcached -m 64
+    networks:
+      - playground
 networks: 
   playground:
