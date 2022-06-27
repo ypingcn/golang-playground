@@ -114,7 +114,6 @@ func TestServer(t *testing.T) {
 		t.Fatalf("newServer(testingOptions(t)): %v", err)
 	}
 
-	const shareURL = "https://play.golang.org/share"
 	testCases := []struct {
 		desc       string
 		method     string
@@ -123,12 +122,6 @@ func TestServer(t *testing.T) {
 		reqBody    []byte
 		respBody   []byte
 	}{
-		// Share tests.
-		{"OPTIONS no-op", http.MethodOptions, shareURL, http.StatusOK, nil, nil},
-		{"Non-POST request", http.MethodGet, shareURL, http.StatusMethodNotAllowed, nil, nil},
-		{"Standard flow", http.MethodPost, shareURL, http.StatusOK, []byte("Snippy McSnipface"), []byte("N_M_YelfGeR")},
-		{"Snippet too large", http.MethodPost, shareURL, http.StatusRequestEntityTooLarge, make([]byte, maxSnippetSize+1), nil},
-
 		// Examples tests.
 		{"Hello example", http.MethodGet, "https://play.golang.org/doc/play/hello.txt", http.StatusOK, nil, []byte("Hello")},
 		{"HTTP example", http.MethodGet, "https://play.golang.org/doc/play/http.txt", http.StatusOK, nil, []byte("net/http")},

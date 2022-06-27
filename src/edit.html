@@ -25,23 +25,10 @@
 				'runEl':        '#run, #embedRun',
 				'fmtEl':        '#fmt',
 				'fmtImportEl':  '#imports',
-				{{if $.Share}}
-				'shareEl':      '#share',
-				'shareURLEl':   '#shareURL',
-				{{end}}
 				'enableHistory': true,
 				'enableShortcuts': true,
 				'enableVet': true,
 				'toysEl': '.js-playgroundToysEl'
-			});
-			playgroundEmbed({
-				'codeEl':       '#code',
-				{{if $.Share}}
-				'shareEl':      '#share',
-				{{end}}
-				'embedEl':      '#embed',
-				'embedLabelEl': '#embedLabel',
-				'embedHTMLEl':  '#shareURL'
 			});
 			$('#code').linedtextarea();
 			// Avoid line wrapping.
@@ -68,17 +55,11 @@
 				createCookie('playgroundImports', $(this).is(':checked') ? 'true' : '');
 			});
 			{{if .Analytics}}
-			// Fire Google Analytics events for Run/Share button clicks.
+			// Fire Google Analytics events for Run button clicks.
 			$('#run').click(function() {
 				gtag('event', 'click', {
 					event_category: 'playground',
 					event_label: 'run-button',
-				});
-			});
-			$('#share').click(function() {
-				gtag('event', 'click', {
-					event_category: 'playground',
-					event_label: 'share-button',
 				});
 			});
 			{{end}}
@@ -112,14 +93,6 @@
 					Imports
 				</label>
 			</div>
-			{{if $.Share}}
-			<input type="button" value="Share" id="share">
-			<input type="text" id="shareURL">
-			<label id="embedLabel">
-				<input type="checkbox" id="embed">
-				embed
-			</label>
-			{{end}}
 			<select class="js-playgroundToysEl">
 				{{range .Examples}}
 				<option value="{{.Path}}">{{.Title}}</option>
