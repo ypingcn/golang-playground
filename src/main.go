@@ -87,6 +87,10 @@ func main() {
 }
 
 func enableMetrics(s *server) error {
+	if !metadata.OnGCE() {
+		return nil
+	}
+
 	gr, err := metrics.GAEResource(context.Background())
 	if err != nil {
 		s.log.Printf("metrics.GAEResource() = _, %q", err)
