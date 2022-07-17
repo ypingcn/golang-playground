@@ -21,3 +21,29 @@ docker pull memcached:1.6.15-alpine
 
 **最后**，打开浏览器，访问 `http://localhost:8080`，就可以开始 Golang 之旅啦。
 
+## 构建镜像
+
+如果你希望进行二次开发，或者“自己动手”从零构建这套程序，可以执行项目目录中的程序（`bash make-images.sh`），程序会自动构建运行所需要的各种镜像。
+
+```bash
+# bash make-images.sh
+Sending build context to Docker daemon  1.349MB
+Step 1/30 : ARG GO_VERSION=1.18.4
+Step 2/30 : FROM golang:${GO_VERSION}-alpine3.16 AS build-playground
+ ---> 5e999c13ceac
+Step 3/30 : LABEL maintainer="soulteary@gmail.com"
+ ---> Using cache
+ ---> a253b22ef53a
+...
+Successfully built 37e124ce9e7f
+Successfully tagged soulteary/golang-playground:web-1.18.4
+...
+Successfully built 6017738b85ce
+Successfully tagged soulteary/golang-playground:sandbox-1.18.4
+Step 1/24 : ARG GO_VERSION=1.18.4
+Step 2/24 : FROM golang:${GO_VERSION}-alpine3.16 AS build-sandbox
+...
+Successfully built c51b8a6647fb
+Successfully tagged soulteary/golang-playground:actuator-1.18.4
+```
+
