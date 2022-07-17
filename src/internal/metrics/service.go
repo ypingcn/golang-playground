@@ -7,13 +7,10 @@
 package metrics
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
-	"path"
 	"time"
 
-	"cloud.google.com/go/compute/metadata"
 	"contrib.go.opencensus.io/exporter/prometheus"
 	"contrib.go.opencensus.io/exporter/stackdriver"
 	"go.opencensus.io/stats/view"
@@ -33,41 +30,13 @@ func NewService(resource *MonitoredResource, views []*view.View) (*Service, erro
 	if err != nil {
 		return nil, err
 	}
-
-	if !metadata.OnGCE() {
-		view.SetReportingPeriod(5 * time.Second)
-		pe, err := prometheus.NewExporter(prometheus.Options{})
-		if err != nil {
-			return nil, fmt.Errorf("prometheus.NewExporter: %w", err)
-		}
-		view.RegisterExporter(pe)
-		return &Service{pExporter: pe}, nil
-	}
-
-	projID, err := metadata.ProjectID()
+	view.SetReportingPeriod(5 * time.Second)
+	pe, err := prometheus.NewExporter(prometheus.Options{})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("prometheus.NewExporter: %w", err)
 	}
-	if resource == nil {
-		return nil, errors.New("resource is required, got nil")
-	}
-	sde, err := stackdriver.NewExporter(stackdriver.Options{
-		ProjectID:         projID,
-		MonitoredResource: resource,
-		ReportingInterval: time.Minute, // Minimum interval for Stackdriver is 1 minute.
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	// Minimum interval for Stackdriver is 1 minute.
-	view.SetReportingPeriod(time.Minute)
-	// Start the metrics exporter.
-	if err := sde.StartMetricsExporter(); err != nil {
-		return nil, err
-	}
-
-	return &Service{sdExporter: sde}, nil
+	view.RegisterExporter(pe)
+	return &Service{pExporter: pe}, nil
 }
 
 // Service controls metric exporters.
@@ -101,61 +70,4 @@ type MonitoredResource mrpb.MonitoredResource
 
 func (r *MonitoredResource) MonitoredResource() (resType string, labels map[string]string) {
 	return r.Type, r.Labels
-}
-
-// GCEResource populates a MonitoredResource with GCE Metadata.
-//
-// The returned MonitoredResource will have the type set to "generic_task".
-func GCEResource(jobName string) (*MonitoredResource, error) {
-	projID, err := metadata.ProjectID()
-	if err != nil {
-		return nil, err
-	}
-	zone, err := metadata.Zone()
-	if err != nil {
-		return nil, err
-	}
-	inst, err := metadata.InstanceName()
-	if err != nil {
-		return nil, err
-	}
-	group, err := instanceGroupName()
-	if err != nil {
-		return nil, err
-	} else if group == "" {
-		group = projID
-	}
-
-	return (*MonitoredResource)(&mrpb.MonitoredResource{
-		Type: "generic_task", // See: https://cloud.google.com/monitoring/api/resources#tag_generic_task
-		Labels: map[string]string{
-			"project_id": projID,
-			"location":   zone,
-			"namespace":  group,
-			"job":        jobName,
-			"task_id":    inst,
-		},
-	}), nil
-}
-
-// instanceGroupName fetches the instanceGroupName from the instance
-// metadata.
-//
-// The instance group manager applies a custom "created-by" attribute
-// to the instance, which is not part of the metadata package API, and
-// must be queried separately.
-//
-// An empty string will be returned if a metadata.NotDefinedError is
-// returned when fetching metadata. An error will be returned if other
-// errors occur when fetching metadata.
-func instanceGroupName() (string, error) {
-	ig, err := metadata.InstanceAttributeValue("created-by")
-	if errors.As(err, new(metadata.NotDefinedError)) {
-		return "", nil
-	} else if err != nil {
-		return "", err
-	}
-	// "created-by" format: "projects/{{InstanceID}}/zones/{{Zone}}/instanceGroupManagers/{{Instance Group Name}}
-	ig = path.Base(ig)
-	return ig, nil
 }

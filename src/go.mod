@@ -3,7 +3,6 @@ module golang.org/x/playground
 go 1.17
 
 require (
-	cloud.google.com/go/compute v1.5.0
 	cloud.google.com/go/datastore v1.6.0
 	contrib.go.opencensus.io/exporter/prometheus v0.4.0
 	contrib.go.opencensus.io/exporter/stackdriver v0.13.10
@@ -18,6 +17,7 @@ require (
 
 require (
 	cloud.google.com/go v0.100.2 // indirect
+	cloud.google.com/go/compute v1.5.0 // indirect
 	cloud.google.com/go/monitoring v1.4.0 // indirect
 	cloud.google.com/go/trace v1.2.0 // indirect
 	github.com/aws/aws-sdk-go v1.43.20 // indirect

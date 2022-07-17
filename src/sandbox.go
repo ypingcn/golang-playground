@@ -20,7 +20,6 @@ import (
 	"go/token"
 	"io"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -34,12 +33,10 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"cloud.google.com/go/compute/metadata"
 	"github.com/bradfitz/gomemcache/memcache"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/tag"
 	"golang.org/x/playground/internal"
-	"golang.org/x/playground/internal/gcpdial"
 	"golang.org/x/playground/sandbox/sandboxtypes"
 )
 
@@ -610,12 +607,7 @@ func sandboxBackendURL() string {
 	if v := os.Getenv("SANDBOX_BACKEND_URL"); v != "" {
 		return v
 	}
-	id, _ := metadata.ProjectID()
-	switch id {
-	case "golang-org":
-		return "http://sandbox.play-sandbox-fwd.il4.us-central1.lb.golang-org.internal/run"
-	}
-	panic(fmt.Sprintf("no SANDBOX_BACKEND_URL environment and no default defined for project %q", id))
+	panic("need set SANDBOX_BACKEND_URL environment")
 }
 
 var sandboxBackendOnce struct {
@@ -632,31 +624,7 @@ func sandboxBackendClient() *http.Client {
 // sandboxBackendOnce.c with the *http.Client we'll use to contact the
 // sandbox execution backend.
 func initSandboxBackendClient() {
-	id, _ := metadata.ProjectID()
-	switch id {
-	case "golang-org":
-		// For production, use a funky Transport dialer that
-		// contacts backend directly, without going through an
-		// internal load balancer, due to internal GCP
-		// reasons, which we might resolve later. This might
-		// be a temporary hack.
-		tr := http.DefaultTransport.(*http.Transport).Clone()
-		rigd := gcpdial.NewRegionInstanceGroupDialer("golang-org", "us-central1", "play-sandbox-rigm")
-		tr.DialContext = func(ctx context.Context, netw, addr string) (net.Conn, error) {
-			if addr == "sandbox.play-sandbox-fwd.il4.us-central1.lb.golang-org.internal:80" {
-				ip, err := rigd.PickIP(ctx)
-				if err != nil {
-					return nil, err
-				}
-				addr = net.JoinHostPort(ip, "80") // and fallthrough
-			}
-			var d net.Dialer
-			return d.DialContext(ctx, netw, addr)
-		}
-		sandboxBackendOnce.c = &http.Client{Transport: tr}
-	default:
-		sandboxBackendOnce.c = http.DefaultClient
-	}
+	sandboxBackendOnce.c = http.DefaultClient
 }
 
 const healthProg = `

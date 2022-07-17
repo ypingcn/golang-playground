@@ -31,13 +31,11 @@ import (
 	"syscall"
 	"time"
 
-	"cloud.google.com/go/compute/metadata"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/tag"
 	"go.opencensus.io/trace"
 	"golang.org/x/playground/internal"
-	"golang.org/x/playground/internal/metrics"
 	"golang.org/x/playground/sandbox/sandboxtypes"
 )
 
@@ -124,17 +122,6 @@ func main() {
 	go handleSignals()
 
 	mux := http.NewServeMux()
-
-	gr, err := metrics.GCEResource("go-playground-sandbox")
-	if err != nil && metadata.OnGCE() {
-		log.Printf("metrics.GceService(%q) = _, %v, wanted no error.", "go-playground-sandbox", err)
-	}
-	if ms, err := metrics.NewService(gr, views); err != nil {
-		log.Printf("Failed to initialize metrics: metrics.NewService() = _, %v, wanted no error", err)
-	} else {
-		mux.Handle("/statusz", ochttp.WithRouteTag(ms, "/statusz"))
-		defer ms.Stop()
-	}
 
 	if out, err := exec.Command("docker", "version").CombinedOutput(); err != nil {
 		log.Fatalf("failed to connect to docker: %v, %s", err, out)

@@ -5,14 +5,9 @@
 package main
 
 import (
-	"context"
 	"flag"
-	"fmt"
 	"net/http"
 	"os"
-
-	"cloud.google.com/go/compute/metadata"
-	"cloud.google.com/go/datastore"
 )
 
 var log = newStdLogger()
@@ -25,22 +20,13 @@ var (
 func main() {
 	flag.Parse()
 	s, err := newServer(func(s *server) error {
-		pid := projectID()
-		if pid == "" {
-			s.db = &inMemStore{}
-		} else {
-			c, err := datastore.NewClient(context.Background(), pid)
-			if err != nil {
-				return fmt.Errorf("could not create cloud datastore client: %v", err)
-			}
-			s.db = cloudDatastore{client: c}
-		}
+		s.db = &inMemStore{}
 		if caddr := os.Getenv("MEMCACHED_ADDR"); caddr != "" {
 			s.cache = newGobCache(caddr)
-			log.Printf("App (project ID: %q) is caching results", pid)
+			log.Printf("Use Memcached caching results")
 		} else {
 			s.cache = (*gobCache)(nil) // Use a no-op cache implementation.
-			log.Printf("App (project ID: %q) is NOT caching results", pid)
+			log.Printf("NOT caching calc results")
 		}
 		s.log = log
 		execpath, _ := os.Executable()
@@ -55,7 +41,7 @@ func main() {
 		}
 		s.examples = eh
 		return nil
-	}, enableMetrics)
+	})
 	if err != nil {
 		log.Fatalf("Error creating server: %v", err)
 	}
@@ -80,16 +66,4 @@ func main() {
 
 	log.Printf("Listening on :%v ...", port)
 	log.Fatalf("Error listening on :%v: %v", port, http.ListenAndServe(":"+port, s))
-}
-
-func enableMetrics(s *server) error {
-	return nil
-}
-
-func projectID() string {
-	id, err := metadata.ProjectID()
-	if err != nil && os.Getenv("GAE_INSTANCE") != "" {
-		log.Fatalf("Could not determine the project ID: %v", err)
-	}
-	return id
 }
