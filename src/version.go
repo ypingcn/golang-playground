@@ -29,11 +29,7 @@ func (s *server) handleVersion(w http.ResponseWriter, req *http.Request) {
 		Release: tag,
 	}
 
-	if s.gotip {
-		version.Name = "Go dev branch"
-	} else {
-		version.Name = fmt.Sprintf("Go %d.%d", maj, min)
-	}
+	version.Name = fmt.Sprintf("Go %d.%d", maj, min)
 
 	s.writeJSONResponse(w, version, http.StatusOK)
 }

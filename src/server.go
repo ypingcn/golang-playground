@@ -21,7 +21,6 @@ type server struct {
 	db       store
 	log      logger
 	cache    responseCache
-	gotip    bool // if set, server is using gotip
 	examples *examplesHandler
 
 	// When the executable was last modified. Used for caching headers of compiled assets.

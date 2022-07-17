@@ -44,16 +44,13 @@ func main() {
 			log.Printf("App (project ID: %q) is NOT caching results", pid)
 		}
 		s.log = log
-		if gotip := os.Getenv("GOTIP"); gotip == "true" {
-			s.gotip = true
-		}
 		execpath, _ := os.Executable()
 		if execpath != "" {
 			if fi, _ := os.Stat(execpath); fi != nil {
 				s.modtime = fi.ModTime()
 			}
 		}
-		eh, err := newExamplesHandler(s.gotip, s.modtime)
+		eh, err := newExamplesHandler(s.modtime)
 		if err != nil {
 			return err
 		}

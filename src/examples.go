@@ -46,12 +46,10 @@ func (h *examplesHandler) hello() string {
 // newExamplesHandler reads from the examples directory, returning a handler to
 // serve their content.
 //
-// If gotip is set, all files ending in .txt will be included in the set of
-// examples. If gotip is not set, files ending in .gotip.txt are excluded.
 // Examples must start with a line beginning "// Title:" that sets their title.
 //
 // modtime is used for content caching headers.
-func newExamplesHandler(gotip bool, modtime time.Time) (*examplesHandler, error) {
+func newExamplesHandler(modtime time.Time) (*examplesHandler, error) {
 	const dir = "examples"
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -62,14 +60,9 @@ func newExamplesHandler(gotip bool, modtime time.Time) (*examplesHandler, error)
 	for _, entry := range entries {
 		name := entry.Name()
 
-		// Read examples ending in .txt, skipping those ending in .gotip.txt if
-		// gotip is not set.
+		// Read examples ending in .txt
 		prefix := "" // if non-empty, this is a relevant example file
-		if strings.HasSuffix(name, ".gotip.txt") {
-			if gotip {
-				prefix = strings.TrimSuffix(name, ".gotip.txt")
-			}
-		} else if strings.HasSuffix(name, ".txt") {
+		if strings.HasSuffix(name, ".txt") {
 			prefix = strings.TrimSuffix(name, ".txt")
 		}
 
