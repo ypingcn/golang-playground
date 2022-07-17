@@ -17,7 +17,6 @@ var editTemplate = template.Must(template.ParseFiles("edit.html"))
 
 type editData struct {
 	Snippet   *snippet
-	Analytics bool
 	GoVersion string
 	Examples  []example
 }
