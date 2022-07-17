@@ -4,3 +4,4 @@ docker
 .gitignore
 docker-compose.yml
 make-images.sh
+README.md
