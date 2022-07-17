@@ -28,19 +28,7 @@ func (s *server) handleEdit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Redirect foo.play.golang.org to play.golang.org.
-	if strings.HasSuffix(r.Host, "."+hostname) {
-		http.Redirect(w, r, "https://"+hostname, http.StatusFound)
-		return
-	}
-
 	snip := &snippet{Body: []byte(s.examples.hello())}
-
-	if r.Host == hostname {
-		// The main playground is now on go.dev/play.
-		http.Redirect(w, r, "https://go.dev/play"+r.URL.Path, http.StatusFound)
-		return
-	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	data := &editData{
