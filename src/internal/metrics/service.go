@@ -7,7 +7,6 @@
 package metrics
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -18,7 +17,6 @@ import (
 	"contrib.go.opencensus.io/exporter/prometheus"
 	"contrib.go.opencensus.io/exporter/stackdriver"
 	"go.opencensus.io/stats/view"
-	"google.golang.org/appengine"
 	mrpb "google.golang.org/genproto/googleapis/api/monitoredres"
 )
 
@@ -136,33 +134,6 @@ func GCEResource(jobName string) (*MonitoredResource, error) {
 			"namespace":  group,
 			"job":        jobName,
 			"task_id":    inst,
-		},
-	}), nil
-}
-
-// GAEResource returns a *MonitoredResource with fields populated and
-// for StackDriver.
-//
-// The resource will be in StackDrvier's gae_instance type.
-func GAEResource(ctx context.Context) (*MonitoredResource, error) {
-	// appengine.IsAppEngine is confusingly false as we're using a custom
-	// container and building without the appenginevm build constraint.
-	// Check metadata.OnGCE instead.
-	if !metadata.OnGCE() {
-		return nil, fmt.Errorf("not running on appengine")
-	}
-	projID, err := metadata.ProjectID()
-	if err != nil {
-		return nil, err
-	}
-	return (*MonitoredResource)(&mrpb.MonitoredResource{
-		Type: "gae_instance",
-		Labels: map[string]string{
-			"project_id":  projID,
-			"module_id":   appengine.ModuleName(ctx),
-			"version_id":  appengine.VersionID(ctx),
-			"instance_id": appengine.InstanceID(),
-			"location":    appengine.Datacenter(ctx),
 		},
 	}), nil
 }
