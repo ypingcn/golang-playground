@@ -10,10 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 	"time"
-
-	"golang.org/x/tools/godoc/static"
 )
 
 type server struct {
@@ -53,19 +50,12 @@ func (s *server) init() {
 	s.mux.HandleFunc("/version", s.handleVersion)
 	s.mux.HandleFunc("/vet", s.commandHandler("vet", vetCheck))
 	s.mux.HandleFunc("/compile", s.commandHandler("prog", compileAndRun))
-	s.mux.HandleFunc("/playground.js", s.handlePlaygroundJS)
 	s.mux.HandleFunc("/favicon.ico", handleFavicon)
 	s.mux.HandleFunc("/_ah/health", s.handleHealthCheck)
 
 	staticHandler := http.StripPrefix("/static/", http.FileServer(http.Dir("./static")))
 	s.mux.Handle("/static/", staticHandler)
 	s.mux.Handle("/doc/play/", http.StripPrefix("/doc/play/", s.examples))
-}
-
-func (s *server) handlePlaygroundJS(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-type", "text/javascript; charset=utf-8")
-	rd := strings.NewReader(static.Files["playground.js"])
-	http.ServeContent(w, r, "playground.js", s.modtime, rd)
 }
 
 func handleFavicon(w http.ResponseWriter, r *http.Request) {

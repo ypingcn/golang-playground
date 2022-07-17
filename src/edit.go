@@ -8,10 +8,7 @@ import (
 	"html/template"
 	"net/http"
 	"runtime"
-	"strings"
 )
-
-const hostname = "play.golang.org"
 
 var editTemplate = template.Must(template.ParseFiles("edit.html"))
 
