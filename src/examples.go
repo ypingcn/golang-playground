@@ -38,8 +38,7 @@ func (h *examplesHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	http.NotFound(w, req)
 }
 
-// hello returns the hello text for this instance, which depends on the Go
-// version and whether or not we are serving Gotip examples.
+// hello returns the hello text for this instance, which depends on the Go version.
 func (h *examplesHandler) hello() string {
 	return h.examples[0].Content
 }
@@ -106,14 +105,8 @@ func newExamplesHandler(gotip bool, modtime time.Time) (*examplesHandler, error)
 		return examples[i].Title < examples[j].Title
 	})
 
-	// For Gotip, serve hello content that includes the Go version.
-	hi := hello
-	if gotip {
-		hi = helloGotip
-	}
-
 	examples = append([]example{
-		{"Hello, playground", "hello.txt", hi},
+		{"Hello, playground", "hello.txt", hello},
 	}, examples...)
 	return &examplesHandler{
 		modtime:  modtime,
@@ -131,23 +124,3 @@ func main() {
 	fmt.Println("Hello, playground")
 }
 `
-
-var helloGotip = fmt.Sprintf(`package main
-
-import (
-	"fmt"
-)
-
-// This playground uses a development build of Go:
-// %s
-
-func Print[T any](s ...T) {
-	for _, v := range s {
-		fmt.Print(v)
-	}
-}
-
-func main() {
-	Print("Hello, ", "playground\n")
-}
-`, runtime.Version())

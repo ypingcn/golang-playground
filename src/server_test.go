@@ -125,9 +125,6 @@ func TestServer(t *testing.T) {
 		// Examples tests.
 		{"Hello example", http.MethodGet, "https://play.golang.org/doc/play/hello.txt", http.StatusOK, nil, []byte("Hello")},
 		{"HTTP example", http.MethodGet, "https://play.golang.org/doc/play/http.txt", http.StatusOK, nil, []byte("net/http")},
-		// Gotip examples should not be available on the non-tip playground.
-		{"Gotip example", http.MethodGet, "https://play.golang.org/doc/play/min.gotip.txt", http.StatusNotFound, nil, nil},
-
 		{"Versions json", http.MethodGet, "https://play.golang.org/version", http.StatusOK, nil, []byte(runtime.Version())},
 	}
 

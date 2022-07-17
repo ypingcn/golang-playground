@@ -19,7 +19,6 @@ type editData struct {
 	Snippet   *snippet
 	Analytics bool
 	GoVersion string
-	Gotip     bool
 	Examples  []example
 }
 
@@ -48,7 +47,6 @@ func (s *server) handleEdit(w http.ResponseWriter, r *http.Request) {
 	data := &editData{
 		Snippet:   snip,
 		GoVersion: runtime.Version(),
-		Gotip:     s.gotip,
 		Examples:  s.examples.examples,
 	}
 	if err := editTemplate.Execute(w, data); err != nil {
