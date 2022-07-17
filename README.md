@@ -4,6 +4,14 @@
 
 ![](./screenshot.png)
 
+## 项目特点
+
+- 支持完全离线运行，无需“联网”，不需担心有任何信息泄漏的风险（比如包含密钥的程序）
+- 支持使用容器进行快速启动，不锁定任何公有云或者复杂的运行环境
+- 和官方程序一样，使用沙盒方式运行 Golang 程序，确保使用安全
+- 和官方程序一样，固定输出时间，让程序能够提供确定性的输出，让程序复现和结果缓存变的更加容易
+- 合并了来自 `go.dev` 的默认示例
+
 ## 快速开始
 
 想要运行程序，**首先**需要先安装 Docker，桌面操作系统可以访问官网[下载安装文件](https://www.docker.com/get-started/)，服务器版本的 Docker 安装，可以[参考这里](https://soulteary.com/2022/06/21/building-a-cost-effective-linux-learning-environment-on-a-laptop-the-basics.html#%E6%9B%B4%E7%AE%80%E5%8D%95%E7%9A%84-docker-%E5%AE%89%E8%A3%85)。
