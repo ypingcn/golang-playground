@@ -12,6 +12,10 @@ import (
 
 var editTemplate = template.Must(template.ParseFiles("edit.html"))
 
+type snippet struct {
+	Body []byte `datastore:",noindex"` // golang.org/issues/23253
+}
+
 type editData struct {
 	Snippet   *snippet
 	GoVersion string
