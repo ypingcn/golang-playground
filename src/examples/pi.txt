@@ -1,4 +1,4 @@
-// Title: Concurrent pi
+// Title: 并发Pi计算
 // Concurrent computation of pi.
 // See https://goo.gl/la6Kli.
 //

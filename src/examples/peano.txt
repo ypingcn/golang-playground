@@ -1,4 +1,4 @@
-// Title: Peano Integers
+// Title: 皮亚诺整数
 // Peano integers are represented by a linked
 // list whose nodes contain no data
 // (the nodes are the data).

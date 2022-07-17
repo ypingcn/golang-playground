@@ -1,4 +1,4 @@
-// Title: Fibonacci Closure
+// Title: 斐波纳契闭包
 package main
 
 import "fmt"

@@ -1,4 +1,4 @@
-// Title: Clear
+// Title: 清屏
 package main
 
 import (

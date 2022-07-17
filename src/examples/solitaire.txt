@@ -1,4 +1,4 @@
-// Title: Peg Solitaire Solver
+// Title: 孔明棋求解器
 // This program solves the (English) peg
 // solitaire board game.
 // http://en.wikipedia.org/wiki/Peg_solitaire

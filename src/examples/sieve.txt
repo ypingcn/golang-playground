@@ -1,4 +1,4 @@
-// Title: Concurrent Prime Sieve
+// Title: 并发质数筛
 // A concurrent prime sieve
 
 package main

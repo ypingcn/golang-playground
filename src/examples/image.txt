@@ -1,4 +1,4 @@
-// Title: Display image
+// Title: 展示图像
 package main
 
 import (

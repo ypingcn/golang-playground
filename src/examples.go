@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"runtime"
 	"sort"
 	"strings"
 	"time"
@@ -99,7 +98,7 @@ func newExamplesHandler(modtime time.Time) (*examplesHandler, error) {
 	})
 
 	examples = append([]example{
-		{"Hello, playground", "hello.txt", hello},
+		{"Hello, 世界！", "hello.txt", hello},
 	}, examples...)
 	return &examplesHandler{
 		modtime:  modtime,
@@ -114,6 +113,6 @@ import (
 )
 
 func main() {
-	fmt.Println("Hello, playground")
+	fmt.Println("Hello, 世界")
 }
 `

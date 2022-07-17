@@ -64,12 +64,12 @@
 	<body itemscope itemtype="http://schema.org/CreativeWork">
 		<div id="banner">
 			<div id="head" itemprop="name">The Go Playground</div>
-			<input type="button" value="Run" id="run">
-			<input type="button" value="Format" id="fmt">
+			<input type="button" value="运行" id="run">
+			<input type="button" value="格式化" id="fmt">
 			<div id="importsBox">
-				<label title="Rewrite imports on Format">
+				<label title="格式化 Import">
 					<input type="checkbox" id="imports">
-					Imports
+					格式化 Import
 				</label>
 			</div>
 			<select class="js-playgroundToysEl">
@@ -77,7 +77,7 @@
 				<option value="{{.Path}}">{{.Title}}</option>
 				{{end}}
 			</select>
-			<input type="button" value="About" id="aboutButton">
+			<input type="button" value="关于" id="aboutButton">
 		</div>
 		<div id="wrap">
 			<textarea autofocus="on" itemprop="description" id="code" name="code" autocorrect="off" autocomplete="off" autocapitalize="off" spellcheck="false">{{printf "%s" .Snippet.Body}}</textarea>
