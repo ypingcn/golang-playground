@@ -20,9 +20,9 @@
 **然后**，执行下面的命令或者项目中的程序（`bash pull-images.sh`），获取必要的镜像文件：
 
 ```bash
-docker pull soulteary/golang-playground:web-1.18.4
-docker pull soulteary/golang-playground:sandbox-1.18.4
-docker pull soulteary/golang-playground:actuator-1.18.4
+docker pull soulteary/golang-playground:web-1.19.0
+docker pull soulteary/golang-playground:sandbox-1.19.0
+docker pull soulteary/golang-playground:actuator-1.19.0
 docker pull memcached:1.6.15-alpine
 ```
 
@@ -37,7 +37,7 @@ docker pull memcached:1.6.15-alpine
 ```bash
 # bash make-images.sh
 Sending build context to Docker daemon  1.349MB
-Step 1/30 : ARG GO_VERSION=1.18.4
+Step 1/30 : ARG GO_VERSION=1.19.0
 Step 2/30 : FROM golang:${GO_VERSION}-alpine3.16 AS build-playground
  ---> 5e999c13ceac
 Step 3/30 : LABEL maintainer="soulteary@gmail.com"
@@ -45,14 +45,14 @@ Step 3/30 : LABEL maintainer="soulteary@gmail.com"
  ---> a253b22ef53a
 ...
 Successfully built 37e124ce9e7f
-Successfully tagged soulteary/golang-playground:web-1.18.4
+Successfully tagged soulteary/golang-playground:web-1.19.0
 ...
 Successfully built 6017738b85ce
-Successfully tagged soulteary/golang-playground:sandbox-1.18.4
-Step 1/24 : ARG GO_VERSION=1.18.4
+Successfully tagged soulteary/golang-playground:sandbox-1.19.0
+Step 1/24 : ARG GO_VERSION=1.19.0
 Step 2/24 : FROM golang:${GO_VERSION}-alpine3.16 AS build-sandbox
 ...
 Successfully built c51b8a6647fb
-Successfully tagged soulteary/golang-playground:actuator-1.18.4
+Successfully tagged soulteary/golang-playground:actuator-1.19.0
 ```
 
