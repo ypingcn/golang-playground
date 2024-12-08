@@ -1,5 +1,5 @@
 ARG GO_VERSION=1.23.4
-FROM golang:${GO_VERSION}-alpine3.20 AS build-sandbox
+FROM golang:${GO_VERSION}-alpine3.21 AS build-sandbox
 # base deps
 RUN apk update && apk add tzdata
 # download golang deps
@@ -16,11 +16,11 @@ RUN CGO_ENABLED=0 go build -ldflags "-w -s" .
 
 
 
-FROM alpine:3.20
+FROM alpine:3.21
 LABEL maintainer="soulteary@gmail.com"
 RUN echo '' > /etc/apk/repositories && \
-    echo "https://mirror.tuna.tsinghua.edu.cn/alpine/v3.20/main"         >> /etc/apk/repositories && \
-    echo "https://mirror.tuna.tsinghua.edu.cn/alpine/v3.20/community"    >> /etc/apk/repositories && \
+    echo "https://mirror.tuna.tsinghua.edu.cn/alpine/v3.21/main"         >> /etc/apk/repositories && \
+    echo "https://mirror.tuna.tsinghua.edu.cn/alpine/v3.21/community"    >> /etc/apk/repositories && \
     echo "Asia/Shanghai" > /etc/timezone
 RUN apk add --no-cache docker-cli
 COPY --from=build-sandbox /go/src/playground/sandbox/sandbox /bin/play-sandbox

@@ -38,7 +38,7 @@ docker pull memcached:1.6.15-alpine
 # bash make-images.sh
 Sending build context to Docker daemon  1.349MB
 Step 1/30 : ARG GO_VERSION=1.23.4
-Step 2/30 : FROM golang:${GO_VERSION}-alpine3.20 AS build-playground
+Step 2/30 : FROM golang:${GO_VERSION}-alpine3.21 AS build-playground
  ---> 5e999c13ceac
 Step 3/30 : LABEL maintainer="soulteary@gmail.com"
  ---> Using cache
@@ -50,7 +50,7 @@ Successfully tagged soulteary/golang-playground:web-1.23.4
 Successfully built 6017738b85ce
 Successfully tagged soulteary/golang-playground:sandbox-1.23.4
 Step 1/24 : ARG GO_VERSION=1.23.4
-Step 2/24 : FROM golang:${GO_VERSION}-alpine3.20 AS build-sandbox
+Step 2/24 : FROM golang:${GO_VERSION}-alpine3.21 AS build-sandbox
 ...
 Successfully built c51b8a6647fb
 Successfully tagged soulteary/golang-playground:actuator-1.23.4
