@@ -50,6 +50,7 @@ func (s *server) init() {
 	s.mux.HandleFunc("/version", s.handleVersion)
 	s.mux.HandleFunc("/vet", s.commandHandler("vet", vetCheck))
 	s.mux.HandleFunc("/compile", s.commandHandler("prog", compileAndRun))
+	s.mux.HandleFunc("/share", s.handleShare)
 	s.mux.HandleFunc("/favicon.ico", handleFavicon)
 	s.mux.HandleFunc("/_ah/health", s.handleHealthCheck)
 

@@ -21,6 +21,8 @@ type inMemStore struct {
 	m map[string]*snippet // key -> snippet
 }
 
+var ErrNoSuchEntity = errors.New("datastore: no such entity")
+
 func (s *inMemStore) PutSnippet(_ context.Context, id string, snip *snippet) error {
 	s.Lock()
 	if s.m == nil {
@@ -34,7 +36,6 @@ func (s *inMemStore) PutSnippet(_ context.Context, id string, snip *snippet) err
 }
 
 func (s *inMemStore) GetSnippet(_ context.Context, id string, snip *snippet) error {
-	var ErrNoSuchEntity = errors.New("datastore: no such entity")
 
 	s.RLock()
 	defer s.RUnlock()
