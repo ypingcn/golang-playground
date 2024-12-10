@@ -6,6 +6,7 @@
 		<script src="/static/jquery.min.js?v=1.8.2"></script>
 		<script src="/static/jquery-linedtextarea.js"></script>
 		<script src="/static/playground.js"></script>
+		<script src="/static/playground-embed.js"></script>
 		<script>
 		$(document).ready(function() {
 			playground({
@@ -14,10 +15,19 @@
 				'runEl':        '#run',
 				'fmtEl':        '#fmt',
 				'fmtImportEl':  '#imports',
+				'shareEl':      '#share',
+				'shareURLEl':   '#shareURL',
 				'enableHistory': true,
 				'enableShortcuts': true,
 				'enableVet': true,
 				'toysEl': '.js-playgroundToysEl'
+			});
+			playgroundEmbed({
+				'codeEl':       '#code',
+				'shareEl':      '#share',
+				'embedEl':      '#embed',
+				'embedLabelEl': '#embedLabel',
+				'embedHTMLEl':  '#shareURL'
 			});
 			$('#code').linedtextarea();
 			// Avoid line wrapping.
@@ -64,20 +74,28 @@
 	<body>
 		<div id="banner">
 			<div id="head" itemprop="name">The Go Playground</div>
-			<input type="button" value="运行" id="run">
-			<input type="button" value="格式化" id="fmt">
+			<input type="button" value="Run" id="run">
+			<input type="button" value="Format" id="fmt">
 			<div id="importsBox">
-				<label title="格式化 Import">
+				<label title="Rewrite imports on Format">
 					<input type="checkbox" id="imports">
-					格式化 Import
+					Imports
 				</label>
 			</div>
+			{{if $.Share}}
+			<input type="button" value="Share" id="share">
+			<input type="text" id="shareURL">
+			<label id="embedLabel">
+				<input type="checkbox" id="embed">
+				embed
+			</label>
+			{{end}}
 			<select class="js-playgroundToysEl">
 				{{range .Examples}}
 				<option value="{{.Path}}">{{.Title}}</option>
 				{{end}}
 			</select>
-			<input type="button" value="关于" id="aboutButton">
+			<input type="button" value="About" id="aboutButton">
 		</div>
 		<div id="wrap">
 			<textarea autofocus="on" itemprop="description" id="code" name="code" autocorrect="off" autocomplete="off" autocapitalize="off" spellcheck="false">{{printf "%s" .Snippet.Body}}</textarea>

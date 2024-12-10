@@ -1,4 +1,4 @@
-// Title: 康威的生命游戏
+// Title: Conway's Game of Life
 // An implementation of Conway's Game of Life.
 package main
 

@@ -1,4 +1,4 @@
-// Title: 获得索引
+// Title: Generic index
 package main
 
 import (

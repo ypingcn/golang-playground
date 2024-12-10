@@ -98,7 +98,7 @@ func newExamplesHandler(modtime time.Time) (*examplesHandler, error) {
 	})
 
 	examples = append([]example{
-		{"Hello, 世界！", "hello.txt", hello},
+		{"Hello, playground", "hello.txt", hello},
 	}, examples...)
 	return &examplesHandler{
 		modtime:  modtime,
@@ -113,6 +113,6 @@ import (
 )
 
 func main() {
-	fmt.Println("Hello, 世界")
+	fmt.Println("Hello, playground")
 }
 `

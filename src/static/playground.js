@@ -24,7 +24,7 @@ here's a skeleton implementation of a playground transport.
 	// The output callback is called multiple times, and each time it is
 	// passed an object of this form.
         var write = {
-                Kind: 'string', // 'start', 'stdout', 'stderr', 'end'
+                Kind: 'string', // 'start', 'stdout', 'stderr', 'end', 'system'
                 Body: 'string'  // content of write or end status message
         }
 
@@ -32,7 +32,8 @@ here's a skeleton implementation of a playground transport.
 	// Subsequent calls may be of Kind 'stdout' or 'stderr'
 	// and must have a non-null Body string.
 	// The final call should be of Kind 'end' with an optional
-	// Body string, signifying a failure ("killed", for example).
+	// Body string, signifying a failure ("killed", for example),
+	// or be of Kind 'system'.
 
 	// The output callback must be of this form.
 	// See PlaygroundOutput (below) for an implementation.
@@ -50,12 +51,17 @@ function HTTPTransport(enableVet) {
     // Backwards compatibility: default values do not affect the output.
     var events = data.Events || [];
     var errors = data.Errors || '';
+    var vetErrors = data.VetErrors || '';
     var status = data.Status || 0;
     var isTest = data.IsTest || false;
     var testsFailed = data.TestsFailed || 0;
 
     var timeout;
     output({ Kind: 'start' });
+    if (vetErrors !== '') {
+      output({ Kind: 'stderr', Body: vetErrors });
+      output({ Kind: 'system', Body: '\nGo vet failed.\n\n' });
+    }
     function next() {
       if (!events || events.length === 0) {
         if (isTest) {
@@ -123,7 +129,7 @@ function HTTPTransport(enableVet) {
       seq++;
       var cur = seq;
       var playing;
-      $.ajax('/compile', {
+      $.ajax('/compile?backend=' + (options.backend || ''), {
         type: 'POST',
         data: { version: 2, body: body, withVet: enableVet },
         dataType: 'json',
@@ -140,57 +146,7 @@ function HTTPTransport(enableVet) {
             }
             return;
           }
-          if (!data.Events) {
-            data.Events = [];
-          }
-          if (data.VetErrors) {
-            // Inject errors from the vet as the first events in the output.
-            data.Events.unshift({
-              Message: 'Go vet exited.\n\n',
-              Kind: 'system',
-              Delay: 0,
-            });
-            data.Events.unshift({
-              Message: data.VetErrors,
-              Kind: 'stderr',
-              Delay: 0,
-            });
-          }
-
-          if (!enableVet || data.VetOK || data.VetErrors) {
-            playing = playback(output, data);
-            return;
-          }
-
-          // In case the server support doesn't support
-          // compile+vet in same request signaled by the
-          // 'withVet' parameter above, also try the old way.
-          // TODO: remove this when it falls out of use.
-          // It is 2019-05-13 now.
-          $.ajax('/vet', {
-            data: { body: body },
-            type: 'POST',
-            dataType: 'json',
-            success: function(dataVet) {
-              if (dataVet.Errors) {
-                // inject errors from the vet as the first events in the output
-                data.Events.unshift({
-                  Message: 'Go vet exited.\n\n',
-                  Kind: 'system',
-                  Delay: 0,
-                });
-                data.Events.unshift({
-                  Message: dataVet.Errors,
-                  Kind: 'stderr',
-                  Delay: 0,
-                });
-              }
-              playing = playback(output, data);
-            },
-            error: function() {
-              playing = playback(output, data);
-            },
-          });
+          playing = playback(output, data);
         },
         error: function() {
           error(output, 'Error communicating with remote server.');
@@ -267,7 +223,7 @@ function PlaygroundOutput(el) {
 
     var m = write.Body;
     if (write.Kind == 'end') {
-      m = '\n程序退出' + (m ? ': ' + m : '.');
+      m = '\nProgram exited' + (m ? ': ' + m : '.');
     }
 
     if (m.indexOf('IMAGE:') === 0) {
@@ -328,6 +284,9 @@ function PlaygroundOutput(el) {
   //  runEl - run button element
   //  fmtEl - fmt button element (optional)
   //  fmtImportEl - fmt "imports" checkbox element (optional)
+  //  shareEl - share button element (optional)
+  //  shareURLEl - share URL text input element (optional)
+  //  shareRedirect - base URL to redirect to on share (optional)
   //  toysEl - toys select element (optional)
   //  enableHistory - enable using HTML5 history API (optional)
   //  transport - playground transport to use (default is HTTPTransport)
@@ -340,21 +299,11 @@ function PlaygroundOutput(el) {
 
     // autoindent helpers.
     function insertTabs(n) {
-      // find the selection start and end
-      var start = code[0].selectionStart;
-      var end = code[0].selectionEnd;
-      // split the textarea content into two, and insert n tabs
-      var v = code[0].value;
-      var u = v.substr(0, start);
-      for (var i = 0; i < n; i++) {
-        u += '\t';
+      // Without the n > 0 check, Safari cannot type a blank line at the bottom of a playground snippet.
+      // See go.dev/issue/49794.
+      if (n > 0) {
+        document.execCommand('insertText', false, '\t'.repeat(n));
       }
-      u += v.substr(end);
-      // set revised content
-      code[0].value = u;
-      // reset caret position after inserted tabs
-      code[0].selectionStart = start + n;
-      code[0].selectionEnd = start + n;
     }
     function autoindent(el) {
       var curpos = el.selectionStart;
@@ -372,7 +321,25 @@ function PlaygroundOutput(el) {
       }, 1);
     }
 
+    // NOTE(cbro): e is a jQuery event, not a DOM event.
+    function handleSaveShortcut(e) {
+      if (e.isDefaultPrevented()) return false;
+      if (!e.metaKey && !e.ctrlKey) return false;
+      if (e.key != 'S' && e.key != 's') return false;
+
+      e.preventDefault();
+
+      // Share and save
+      share(function(url) {
+        window.location.href = url + '.go?download=true';
+      });
+
+      return true;
+    }
+
     function keyHandler(e) {
+      if (opts.enableShortcuts && handleSaveShortcut(e)) return;
+
       if (e.keyCode == 9 && !e.ctrlKey) {
         // tab (but not ctrl-tab)
         insertTabs(1);
@@ -414,13 +381,24 @@ function PlaygroundOutput(el) {
         .join('/');
     }
 
-    var pushedEmpty = window.location.pathname == '/';
+    var pushedPlay = window.location.pathname == '/play/';
     function inputChanged() {
-      if (pushedEmpty) {
+      if (pushedPlay) {
         return;
       }
-      pushedEmpty = true;
-      window.history.pushState(null, '', '/');
+      pushedPlay = true;
+      $(opts.shareURLEl).hide();
+      $(opts.toysEl).show();
+      var path = window.location.pathname;
+      var i = path.indexOf('/play/');
+      var p = path.substr(0, i+6);
+      // if (opts.versionEl !== null) {
+      //   var v = $(opts.versionEl).val();
+      //   if (v != '') {
+      //     p += '?v=' + v;
+      //   }
+      // }
+      window.history.pushState(null, '', p);
     }
     function popState(e) {
       if (e === null) {
@@ -442,6 +420,17 @@ function PlaygroundOutput(el) {
       window.addEventListener('popstate', popState);
     }
 
+    function backend() {
+      if (!opts.versionEl) {
+        return '';
+      }
+      var vers = $(opts.versionEl);
+      if (!vers) {
+        return '';
+      }
+      return vers.val();
+    }
+
     function setError(error) {
       if (running) running.Kill();
       lineClear();
@@ -454,23 +443,22 @@ function PlaygroundOutput(el) {
     function loading() {
       lineClear();
       if (running) running.Kill();
-      output.removeClass('error').text('等待远程服务器响应...');
+      output.removeClass('error').text('Waiting for remote server...');
     }
-    function run() {
+    function runOnly() {
       loading();
       running = transport.Run(
         body(),
-        highlightOutput(PlaygroundOutput(output[0]))
+        highlightOutput(PlaygroundOutput(output[0])),
+        {backend: backend()},
       );
     }
 
-    function fmt() {
+    function fmtAnd(run) {
       loading();
       var data = { body: body() };
-      if ($(opts.fmtImportEl).is(':checked')) {
-        data['imports'] = 'true';
-      }
-      $.ajax('/fmt', {
+      data['imports'] = 'true';
+      $.ajax('/fmt?backend='+backend(), {
         data: data,
         type: 'POST',
         dataType: 'json',
@@ -481,6 +469,89 @@ function PlaygroundOutput(el) {
             setBody(data.Body);
             setError('');
           }
+          run();
+        },
+        error: function() {
+          setError('Error communicating with remote server.');
+        },
+      });
+    }
+
+    function loadShare(id) {
+      $.ajax('/share?id='+id, {
+        processData: false,
+        type: 'GET',
+        complete: function(xhr) {
+          if(xhr.status != 200) {
+            setBody('Cannot load shared snippet; try again.');
+            return;
+          }
+          setBody(xhr.responseText);
+        },
+      })
+    }
+
+    function fmt() {
+      fmtAnd(function(){});
+    }
+
+    function run() {
+      fmtAnd(runOnly);
+    }
+
+    var shareURL; // jQuery element to show the shared URL.
+    var sharing = false; // true if there is a pending request.
+    var shareCallbacks = [];
+    function share(opt_callback) {
+      if (opt_callback) shareCallbacks.push(opt_callback);
+
+      if (sharing) return;
+      sharing = true;
+
+      var errorMessages = {
+        413: 'Snippet is too large to share.'
+      };
+
+      var sharingData = body();
+      $.ajax('/share', {
+        processData: false,
+        data: sharingData,
+        type: 'POST',
+        contentType: 'text/plain; charset=utf-8',
+        complete: function(xhr) {
+          sharing = false;
+          if (xhr.status != 200) {
+            var alertMsg = errorMessages[xhr.status] ? errorMessages[xhr.status] : 'Server error; try again.';
+            alert(alertMsg);
+            return;
+          }
+          if (opts.shareRedirect) {
+            window.location = opts.shareRedirect + xhr.responseText;
+          }
+          var path = '/p/' + xhr.responseText;
+          // if (opts.versionEl !== null && $(opts.versionEl).val() != "") {
+          //   path += "?v=" + $(opts.versionEl).val();
+          // }
+          var url = origin(window.location) + path;
+          for (var i = 0; i < shareCallbacks.length; i++) {
+            shareCallbacks[i](url);
+          }
+          shareCallbacks = [];
+
+          if (shareURL) {
+            shareURL
+              .show()
+              .val(url)
+              .focus()
+              .select();
+
+            $(opts.toysEl).hide();
+            if (rewriteHistory) {
+              var historyData = { code: sharingData };
+              window.history.pushState(historyData, '', path);
+              pushedPlay = false;
+            }
+          }
         },
       });
     }
@@ -488,8 +559,36 @@ function PlaygroundOutput(el) {
     $(opts.runEl).click(run);
     $(opts.fmtEl).click(fmt);
 
+    if (
+      opts.shareEl !== null &&
+      (opts.shareURLEl !== null || opts.shareRedirect !== null)
+    ) {
+      if (opts.shareURLEl) {
+        shareURL = $(opts.shareURLEl).hide();
+      }
+      $(opts.shareEl).click(function() {
+        share();
+      });
+    }
+
+    var path = window.location.pathname;
+    var toyDisable = false;
+    if (path.startsWith('/go.dev/')) {
+      path = path.slice(7);
+    }
+    if (path.startsWith('/p/')) {
+      var id = path.slice(3);
+      id = id.replace(/\.go$/, "");
+      loadShare(id);
+      toyDisable = true;
+    }
+
     if (opts.toysEl !== null) {
       $(opts.toysEl).bind('change', function() {
+        if (toyDisable) {
+          toyDisable = false;
+          return;
+        }
         var toy = $(this).val();
         $.ajax('/doc/play/' + toy, {
           processData: false,
@@ -500,9 +599,28 @@ function PlaygroundOutput(el) {
               return;
             }
             setBody(xhr.responseText);
+            if (toy.includes('-dev') && opts.versionEl !== null) {
+              $(opts.versionEl).val('gotip');
+            }
+            run();
           },
         });
       });
+    }
+
+    if (opts.versionEl !== null) {
+     var select = $(opts.versionEl);
+      var v = (new URL(window.location)).searchParams.get('v');
+      if (v !== null && v != "") {
+      	select.val(v);
+        if (select.val() != v) {
+          select.append($('<option>', {value: v, text: 'Backend: ' + v}));
+          select.val(v);
+        }
+      }
+      if (opts.enableHistory) {
+        select.bind('change', inputChanged);
+      }
     }
   }
 
