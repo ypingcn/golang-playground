@@ -1,4 +1,4 @@
-# Golang 游乐场 (Go Playground)
+# Go Playground(Golang 游乐场)
 
 基于 [Golang 官方项目](https://github.com/golang/playground)调整而来，让你可以在本地快速启动一套 Golang Web Playground，来快速验证各种 Golang 代码片段。
 
@@ -15,44 +15,27 @@
 
 ## 快速开始
 
-想要运行程序，**首先**需要先安装 Docker，桌面操作系统可以访问官网[下载安装文件](https://www.docker.com/get-started/)，服务器版本的 Docker 安装，可以[参考这里](https://soulteary.com/2022/06/21/building-a-cost-effective-linux-learning-environment-on-a-laptop-the-basics.html#%E6%9B%B4%E7%AE%80%E5%8D%95%E7%9A%84-docker-%E5%AE%89%E8%A3%85)。
+想要运行程序，**首先**需要先安装 Docker
 
-**然后**，执行下面的命令或者项目中的程序（`bash pull-images.sh`），获取必要的镜像文件：
+**然后**，执行下面的命令或者项目中的程序（`bash make-images.sh`），构建必要的镜像文件：
 
 ```bash
-docker pull soulteary/golang-playground:web-1.23.4
-docker pull soulteary/golang-playground:sandbox-1.23.4
-docker pull soulteary/golang-playground:actuator-1.23.4
+docker pull ypingcn/golang-playground:web-1.23.4
+docker pull ypingcn/golang-playground:sandbox-1.23.4
+docker pull ypingcn/golang-playground:actuator-1.23.4
 docker pull memcached:1.6.15-alpine
 ```
 
-**接着**，在镜像获取完毕之后，使用 `docker-compose up -d` 或 `docker compose up -d`，启动程序。
-
-**最后**，打开浏览器，访问 `http://localhost:8080`，就可以开始 Golang 之旅啦。
-
-## 构建镜像
-
-如果你希望进行二次开发，或者“自己动手”从零构建这套程序，可以执行项目目录中的程序（`bash make-images.sh`），程序会自动构建运行所需要的各种镜像。
+执行命令获取依赖的镜像文件（`bash make-images.sh`）
 
 ```bash
-# bash make-images.sh
-Sending build context to Docker daemon  1.349MB
-Step 1/30 : ARG GO_VERSION=1.23.4
-Step 2/30 : FROM golang:${GO_VERSION}-alpine3.21 AS build-playground
- ---> 5e999c13ceac
-Step 3/30 : LABEL maintainer="soulteary@gmail.com"
- ---> Using cache
- ---> a253b22ef53a
-...
-Successfully built 37e124ce9e7f
-Successfully tagged soulteary/golang-playground:web-1.23.4
-...
-Successfully built 6017738b85ce
-Successfully tagged soulteary/golang-playground:sandbox-1.23.4
-Step 1/24 : ARG GO_VERSION=1.23.4
-Step 2/24 : FROM golang:${GO_VERSION}-alpine3.21 AS build-sandbox
-...
-Successfully built c51b8a6647fb
-Successfully tagged soulteary/golang-playground:actuator-1.23.4
+docker pull memcached:1.6.15-alpine
 ```
+
+**接着**，在镜像获取完毕之后，如需使用私有仓库中的代码，请编辑 web 服务中`GOPRIVATE`、`GONOPROXY`和`GONOSUMDB`三个环境变量，将私有仓库地址添加到其中。
+
+检查`docker_web_init_script.sh`脚本中的参数，申请账号后更新相关参数。
+
+**最后**，使用 `docker-compose up -d` 或 `docker compose up -d`，启动程序。打开浏览器，访问 `http://localhost:8080`，就可以开始 Golang 之旅啦。
+
 

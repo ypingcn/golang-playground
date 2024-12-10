@@ -17,7 +17,7 @@ RUN CGO_ENABLED=0 go build -ldflags "-w -s" .
 
 
 FROM alpine:3.21 AS build-actuator
-LABEL maintainer="soulteary@gmail.com"
+LABEL maintainer="ypingcn@outlook.com"
 RUN echo '' > /etc/apk/repositories && \
     echo "https://mirror.tuna.tsinghua.edu.cn/alpine/v3.21/main"         >> /etc/apk/repositories && \
     echo "https://mirror.tuna.tsinghua.edu.cn/alpine/v3.21/community"    >> /etc/apk/repositories && \
@@ -27,10 +27,8 @@ COPY --from=build-sandbox /go/src/playground/sandbox/sandbox /bin/play-sandbox
 COPY --from=build-sandbox /usr/share/zoneinfo /usr/share/zoneinfo
 ENTRYPOINT ["/bin/play-sandbox"]
 
-
-
-FROM busybox:glibc
-LABEL maintainer="soulteary@gmail.com"
-COPY --from=build-actuator /bin/play-sandbox /bin/play-sandbox
-COPY --from=build-actuator /usr/share/zoneinfo /usr/share/zoneinfo
-ENTRYPOINT ["/bin/play-sandbox"]
+# FROM busybox:glibc
+# LABEL maintainer="ypingcn@outlook.com"
+# COPY --from=build-actuator /bin/play-sandbox /bin/play-sandbox
+# COPY --from=build-actuator /usr/share/zoneinfo /usr/share/zoneinfo
+# ENTRYPOINT ["/bin/play-sandbox"]

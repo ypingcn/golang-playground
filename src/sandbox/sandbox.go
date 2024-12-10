@@ -472,6 +472,7 @@ func startContainer(ctx context.Context) (c *Container, err error) {
 	cmd.Stdout = &switchWriter{switchAfter: []byte(containedStartMessage), dst1: pw, dst2: stdout}
 	cmd.Stderr = stderr
 	if err := cmd.Start(); err != nil {
+		log.Printf("%s return ==> %s", cmd.String(), err)
 		return nil, err
 	}
 

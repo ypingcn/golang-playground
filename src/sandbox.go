@@ -334,16 +334,21 @@ func compileAndRun(ctx context.Context, req *request) (*response, error) {
 	}
 	defer os.RemoveAll(tmpDir)
 
+	log.Printf("%s: start sandboxBuild", tmpDir)
 	br, err := sandboxBuild(ctx, tmpDir, []byte(req.Body), req.WithVet)
 	if err != nil {
+		log.Printf("%s: error sandboxBuild: %v", tmpDir, err)
 		return nil, err
 	}
 	if br.errorMessage != "" {
+		log.Printf("%s: error sandboxBuild build result: %v", tmpDir, br.errorMessage)
 		return &response{Errors: br.errorMessage}, nil
 	}
 
+	log.Printf("%s: start sandboxBuild", tmpDir)
 	execRes, err := sandboxRun(ctx, br.exePath, br.testParam)
 	if err != nil {
+		log.Printf("%s: error sandboxRun: %v", tmpDir, err)
 		return nil, err
 	}
 	if execRes.Error != "" {
@@ -467,11 +472,17 @@ func sandboxBuild(ctx context.Context, tmpDir string, in []byte, vet bool) (br *
 	cmd.Env = []string{"GOOS=linux", "GOARCH=amd64", "GOROOT=/usr/local/go-faketime"}
 	cmd.Env = append(cmd.Env, "GOCACHE="+goCache)
 	cmd.Env = append(cmd.Env, "CGO_ENABLED=0")
+	cmd.Env = append(cmd.Env, "PATH="+os.Getenv("PATH"))
+	if os.Getenv("GOPRIVATE") != "" || os.Getenv("GONOPROXY") != "" || os.Getenv("GONOSUMDB") != "" {
+		cmd.Env = append(cmd.Env, "GOPRIVATE="+os.Getenv("GOPRIVATE"))
+		cmd.Env = append(cmd.Env, "GONOPROXY="+os.Getenv("GONOPROXY"))
+		cmd.Env = append(cmd.Env, "GONOSUMDB="+os.Getenv("GONOSUMDB"))
+	}
 	// Create a GOPATH just for modules to be downloaded
 	// into GOPATH/pkg/mod.
 	cmd.Args = append(cmd.Args, "-modcacherw")
 	cmd.Args = append(cmd.Args, "-mod=mod")
-	br.goPath, err = ioutil.TempDir("", "gopath")
+	br.goPath, err = ioutil.TempDir("", "gopath-")
 	if err != nil {
 		log.Printf("error creating temp directory: %v", err)
 		return nil, fmt.Errorf("error creating temp directory: %v", err)
@@ -482,7 +493,11 @@ func sandboxBuild(ctx context.Context, tmpDir string, in []byte, vet bool) (br *
 	out := &bytes.Buffer{}
 	cmd.Stderr, cmd.Stdout = out, out
 
+	log.Printf("Command ==> %v", cmd.String())
+	log.Printf("Env     ==> %v", cmd.Env)
+
 	if err := cmd.Start(); err != nil {
+		log.Printf("error starting go build: %v", err)
 		return nil, fmt.Errorf("error starting go build: %v", err)
 	}
 	ctx, cancel := context.WithTimeout(ctx, maxBuildTime)
@@ -491,7 +506,7 @@ func sandboxBuild(ctx context.Context, tmpDir string, in []byte, vet bool) (br *
 		if errors.Is(err, context.DeadlineExceeded) {
 			br.errorMessage = fmt.Sprintln(goBuildTimeoutError)
 		} else if ee := (*exec.ExitError)(nil); !errors.As(err, &ee) {
-			log.Printf("error building program: %v", err)
+			log.Printf("error building go source: %v", err)
 			return nil, fmt.Errorf("error building go source: %v", err)
 		}
 		// Return compile errors to the user.
@@ -507,14 +522,17 @@ func sandboxBuild(ctx context.Context, tmpDir string, in []byte, vet bool) (br *
 	const maxBinarySize = 100 << 20 // copied from sandbox backend; TODO: unify?
 	if fi, err := os.Stat(br.exePath); err != nil || fi.Size() == 0 || fi.Size() > maxBinarySize {
 		if err != nil {
+			log.Printf("failed to stat binary: %v", err)
 			return nil, fmt.Errorf("failed to stat binary: %v", err)
 		}
+		log.Printf("invalid binary size %d", fi.Size())
 		return nil, fmt.Errorf("invalid binary size %d", fi.Size())
 	}
 	if vet {
 		// TODO: do this concurrently with the execution to reduce latency.
 		br.vetOut, err = vetCheckInDir(ctx, tmpDir, br.goPath)
 		if err != nil {
+			log.Printf("running vet: %v", err)
 			return nil, fmt.Errorf("running vet: %v", err)
 		}
 	}
@@ -577,7 +595,8 @@ func playgroundGoproxy() string {
 	if proxypath != "" {
 		return proxypath
 	}
-	return "https://proxy.golang.org"
+	// return "https://proxy.golang.org"
+	return "https://goproxy.cn"
 }
 
 // healthCheck attempts to build a binary from the source in healthProg.
