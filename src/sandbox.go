@@ -345,13 +345,14 @@ func compileAndRun(ctx context.Context, req *request) (*response, error) {
 		return &response{Errors: br.errorMessage}, nil
 	}
 
-	log.Printf("%s: start sandboxBuild", tmpDir)
+	log.Printf("%s: start sandboxRun", tmpDir)
 	execRes, err := sandboxRun(ctx, br.exePath, br.testParam)
 	if err != nil {
 		log.Printf("%s: error sandboxRun: %v", tmpDir, err)
 		return nil, err
 	}
 	if execRes.Error != "" {
+		log.Printf("%s: error sandboxRun: %s", tmpDir, execRes.Error)
 		return &response{Errors: execRes.Error}, nil
 	}
 

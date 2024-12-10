@@ -30,15 +30,18 @@ RUN echo '' > /etc/apk/repositories && \
 RUN apk add --no-cache git openssh-client
 
 WORKDIR /usr/local/go-faketime
-RUN ./bin/go install --tags=faketime std
+RUN ./bin/go install --tags=faketime std 
 RUN ./bin/go vet --tags=faketime std || true
 
 RUN mkdir /app
 COPY --from=build-playground /go/src/playground/playground /app
+COPY init-script.sh /app/init-script.sh 
+RUN dos2unix /app/init-script.sh
+RUN chmod +x /app/init-script.sh
 COPY src/edit.html /app
 COPY src/static /app/static
 COPY src/examples /app/examples
 WORKDIR /app
 
 EXPOSE 8080
-ENTRYPOINT ["/app/playground"]
+ENTRYPOINT ["/app/init-script.sh"]
